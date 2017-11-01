@@ -2,9 +2,9 @@
 Asenna ja konfiguroi jokin muu demoni kuin Apache.  
 - Osaatko vaihtaa SSH:n portin?  
 
-Harjoitus on tehty Windows 10 koneella, Virtualboxissa, puhdasta Xubuntun snapshottia käyttäen.
+#### Harjoitus on tehty Windows 10 koneella, Virtualboxissa, puhdasta Xubuntun snapshottia käyttäen.
 
-### Setup miten työskentelen (symlink /etc/puppet -> /home/miik/git/puppet/puppet/ helpottamaan gitin kanssa toimimista)
+#### Setup miten työskentelen (symlink /etc/puppet -> /home/miik/git/puppet/puppet/ helpottamaan gitin kanssa toimimista)
 https://github.com/Miikka-Alatalo/puppet/tree/master/setup
 
 ## Käsin kokeilu
@@ -118,4 +118,75 @@ Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.10.0-28-generic x86_64)
 77 updates are security updates.
 
 Last login: Wed Nov  1 22:36:45 2017 from 127.0.0.1
+```
+Kopioin nykyisen sshd_config-tiedoston talteen myöhempää käyttöä varten
+```
+sudo cp sshd_config ~/
+```
+## Puppetilla resource-tarkastelu
+Openssh-serverin tarkastelu puppetilla:
+```
+miik@miikVB:/etc/ssh$ sudo puppet resource package openssh-server
+package { 'openssh-server':
+  ensure => '1:7.2p2-4ubuntu2.2',
+}
+```
+sshd_config tiedoston tarkastelu (virheilmoitus, koska en antanut koko filepathia)
+```
+miik@miikVB:/etc/ssh$ sudo puppet resource file sshd_config
+Error: Could not run: Parameter path failed on File[sshd_config]: File paths must be fully qualified, not 'sshd_config'
+miik@miikVB:/etc/ssh$ sudo puppet resource file /etc/ssh/sshd_config
+file { '/etc/ssh/sshd_config':
+  ensure  => 'file',
+  content => '{md5}3c3eda0458a89ba4f7a372c2e0b2a61a',
+  ctime   => '2017-11-01 22:44:22 +0200',
+  group   => '0',
+  mode    => '644',
+  mtime   => '2017-11-01 22:44:22 +0200',
+  owner   => '0',
+  type    => 'file',
+}
+```
+ja vielä ssh service
+```
+miik@miikVB:/etc/ssh$ sudo puppet resource service ssh
+service { 'ssh':
+  ensure => 'running',
+}
+```
+## Kaiken yhdistäminen automaattiseksi
+Tein symlinkattuun puppetin modules-kansioon (minulla /home/miik/git/puppet/puppet/modules) sshd-kansion ja sinne kansiot manifests ja templates
+```
+miik@miikVB:~/git/puppet/puppet/modules$ mkdir sshd
+miik@miikVB:~/git/puppet/puppet/modules$ cd sshd/
+miik@miikVB:~/git/puppet/puppet/modules/sshd$ mkdir manifests
+miik@miikVB:~/git/puppet/puppet/modules/sshd$ mkdir templates
+```
+templates kansioon kopioin aikaisemmin kopioidun sshd_config-tiedoston (siinä muokattu port)
+```
+miik@miikVB:~/git/puppet/puppet/modules/sshd$ cd templates/
+miik@miikVB:~/git/puppet/puppet/modules/sshd/templates$ cp ~/sshd_config ./
+```
+manifests kansioon tein init.pp
+```
+miik@miikVB:~/git/puppet/puppet/modules/sshd/templates$ cd ..
+miik@miikVB:~/git/puppet/puppet/modules/sshd$ cd manifests/
+miik@miikVB:~/git/puppet/puppet/modules/sshd/manifests$ nano init.pp
+```
+ja sen sisällöksi
+```
+class sshd {
+	File { owner => '0', group => '0', mode => '0644', }
+	Package { ensure => 'installed', allowcdrom => true, }
+	Service { ensure => 'running', enable => true, }
+
+	package { 'openssh-server':}
+
+	file { '/etc/ssh/sshd_config':
+		content => template('sshd/sshd_config'),
+		notify => Service['ssh'],
+	}
+
+	service { 'ssh': }
+}
 ```
