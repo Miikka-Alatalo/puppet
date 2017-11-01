@@ -34,7 +34,7 @@ ja sain vastauksen:
 ```
 ssh: connect to host localhost port 22: Connection refused
 ```
-eli porttiin 22 ei saada yhteyttä.
+eli porttiin 22 ei saada yhteyttä.  
 Asensin sshd:n (apt-get update tehty aikaisemmin)
 ```
 sudo apt-get install -y openssh-server
@@ -48,7 +48,7 @@ ssh_config        ssh_host_ecdsa_key      ssh_host_rsa_key
 sshd_config       ssh_host_ecdsa_key.pub  ssh_host_rsa_key.pub
 ssh_host_dsa_key  ssh_host_ed25519_key    ssh_import_id
 ```
-eli asetustiedostot ovat syntyneet.
+eli asetustiedostot ovat syntyneet.  
 Kokeilen uudestaan ssh:ta
 ```
 ssh miik@localhost
@@ -190,13 +190,13 @@ class sshd {
 	service { 'ssh': }
 }
 ```
-(Kirjainten koolla väliä seuraavassa)
-File varmistaa, että kaikilla tiedostoilla on oikea omistaja, ryhmä sekä oikeudet.
-Package varmistaa, että paketti on asennettu ja sallittu live-tikulla.
-Service varmistaa, että service on käynnissä ja sallittu.
-package katsoo, että openssh-server on Packagen mukainen eli asennettu ja sallittu tikulla.
-file katsoo Filen ehdot sekä oikean sisällön ja huomauttaa ssh:ta mahdollisista muutoksista.
-service varmistaa, että ssh on Servicen ehtojen mukainen.
+(Kirjainten koolla väliä seuraavassa)  
+File varmistaa, että kaikilla tiedostoilla on oikea omistaja, ryhmä sekä oikeudet.  
+Package varmistaa, että paketti on asennettu ja sallittu live-tikulla.  
+Service varmistaa, että service on käynnissä ja sallittu.  
+package katsoo, että openssh-server on Packagen mukainen eli asennettu ja sallittu tikulla.  
+file katsoo Filen ehdot sekä oikean sisällön ja huomauttaa ssh:ta mahdollisista muutoksista.  
+service varmistaa, että ssh on Servicen ehtojen mukainen.  
 
 Puppetin manifests kansion site.pp tiedostoon lisäsin rivin:
 ```
@@ -222,7 +222,7 @@ Notice: /Stage[main]/Sshd/File[/etc/ssh/sshd_config]/content: content changed '{
 Notice: /Stage[main]/Sshd/Service[ssh]: Triggered 'refresh' from 1 events
 Notice: Finished catalog run in 0.17 seconds
 ```
-Puppet huomasi tiedoston olevan väärä ja vaihtoi sen, jonka jälkeen se refreshasi ssh:n.
+Puppet huomasi tiedoston olevan väärä ja vaihtoi sen, jonka jälkeen se refreshasi ssh:n.  
 Poistin openssh-serverin kokonaan
 ```
 sudo apt-get purge openssh-server
@@ -234,7 +234,7 @@ ssh: connect to host localhost port 22: Connection refused
 miik@miikVB:/etc/ssh$ ssh miik@localhost -p 1234
 ssh: connect to host localhost port 1234: Connection refused
 ```
-odotetusti ei onnistunut. Myöskin asetustiedostot /etc/ssh :sta ovat kadonneet purgen myötä.
+odotetusti ei onnistunut. Myöskin asetustiedostot /etc/ssh :sta ovat kadonneet purgen myötä.  
 Applysin site.pp:n uudestaan
 ```
 miik@miikVB:~/git/puppet/puppet/manifests$ sudo puppet apply site.pp
@@ -265,4 +265,4 @@ Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.10.0-28-generic x86_64)
 
 Last login: Wed Nov  1 22:46:58 2017 from 127.0.0.1
 ```
-eli kaikki toimii!
+# eli kaikki toimii!
