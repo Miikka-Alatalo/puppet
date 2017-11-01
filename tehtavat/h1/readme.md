@@ -4,7 +4,7 @@ Asenna ja konfiguroi jokin muu demoni kuin Apache.
 
 #### Harjoitus on tehty Windows 10 koneella, Virtualboxissa, puhdasta Xubuntu 16.04.3 snapshottia käyttäen.
 
-#### Setup miten työskentelen (symlink /etc/puppet -> /home/miik/git/puppet/puppet/ helpottamaan gitin kanssa toimimista)
+#### Setup miten työskentelen (symlink /etc/puppet -> /home/miik/git/puppet/puppet/ helpottamaan gitin kanssa toimimista sekä ordering=manifest asetus)
 https://github.com/Miikka-Alatalo/puppet/tree/master/setup
 
 ## Käsin kokeilu
