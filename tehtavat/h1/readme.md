@@ -2,7 +2,7 @@
 Asenna ja konfiguroi jokin muu demoni kuin Apache.  
 - Osaatko vaihtaa SSH:n portin?  
 
-#### Harjoitus on tehty Windows 10 koneella, Virtualboxissa, puhdasta Xubuntun snapshottia käyttäen.
+#### Harjoitus on tehty Windows 10 koneella, Virtualboxissa, puhdasta Xubuntu 16.04.3 snapshottia käyttäen.
 
 #### Setup miten työskentelen (symlink /etc/puppet -> /home/miik/git/puppet/puppet/ helpottamaan gitin kanssa toimimista)
 https://github.com/Miikka-Alatalo/puppet/tree/master/setup
@@ -190,3 +190,79 @@ class sshd {
 	service { 'ssh': }
 }
 ```
+(Kirjainten koolla väliä seuraavassa)
+File varmistaa, että kaikilla tiedostoilla on oikea omistaja, ryhmä sekä oikeudet.
+Package varmistaa, että paketti on asennettu ja sallittu live-tikulla.
+Service varmistaa, että service on käynnissä ja sallittu.
+package katsoo, että openssh-server on Packagen mukainen eli asennettu ja sallittu tikulla.
+file katsoo Filen ehdot sekä oikean sisällön ja huomauttaa ssh:ta mahdollisista muutoksista.
+service varmistaa, että ssh on Servicen ehtojen mukainen.
+
+Puppetin manifests kansion site.pp tiedostoon lisäsin rivin:
+```
+miik@miikVB:~/git/puppet/puppet/modules/sshd/manifests$ cd ../../..
+miik@miikVB:~/git/puppet/puppet$ cd manifests
+miik@miikVB:~/git/puppet/puppet/manifests$ nano site.pp 
+```
+```
+include sshd
+```
+Applysin site.pp:n ja odotetusti puppet ei tehnyt mitään
+```
+miik@miikVB:~/git/puppet/puppet/manifests$ sudo puppet apply site.pp
+Notice: Compiled catalog for miikvb.home in environment production in 0.32 seconds
+Notice: Finished catalog run in 0.05 seconds
+```
+Kävin vaihtamassa ssh:n portin takaisin 22 ja suoritin puppet applyn uudestaan:
+```
+sudoedit /etc/ssh/sshd_config
+miik@miikVB:~/git/puppet/puppet/manifests$ sudo puppet apply site.pp
+Notice: Compiled catalog for miikvb.home in environment production in 0.32 seconds
+Notice: /Stage[main]/Sshd/File[/etc/ssh/sshd_config]/content: content changed '{md5}bd3a2b95f8b4b180eed707794ad81e4d' to '{md5}3c3eda0458a89ba4f7a372c2e0b2a61a'
+Notice: /Stage[main]/Sshd/Service[ssh]: Triggered 'refresh' from 1 events
+Notice: Finished catalog run in 0.17 seconds
+```
+Puppet huomasi tiedoston olevan väärä ja vaihtoi sen, jonka jälkeen se refreshasi ssh:n.
+Poistin openssh-serverin kokonaan
+```
+sudo apt-get purge openssh-server
+```
+ja kokeilin uudestaan ssh molemmilla porteilla
+```
+miik@miikVB:/etc/ssh$ ssh miik@localhost
+ssh: connect to host localhost port 22: Connection refused
+miik@miikVB:/etc/ssh$ ssh miik@localhost -p 1234
+ssh: connect to host localhost port 1234: Connection refused
+```
+odotetusti ei onnistunut. Myöskin asetustiedostot /etc/ssh :sta ovat kadonneet purgen myötä.
+Applysin site.pp:n uudestaan
+```
+miik@miikVB:~/git/puppet/puppet/manifests$ sudo puppet apply site.pp
+Notice: Compiled catalog for miikvb.home in environment production in 0.32 seconds
+Notice: /Stage[main]/Sshd/Package[openssh-server]/ensure: ensure changed 'purged' to 'present'
+Notice: /Stage[main]/Sshd/File[/etc/ssh/sshd_config]/content: content changed '{md5}bd3a2b95f8b4b180eed707794ad81e4d' to '{md5}3c3eda0458a89ba4f7a372c2e0b2a61a'
+Notice: /Stage[main]/Sshd/Service[ssh]: Triggered 'refresh' from 1 events
+Notice: Finished catalog run in 3.80 seconds
+```
+Puppet asensi openssh-serverin ja laittoi oikean config tiedoston. Nyt yhteys onnistuu taas oikealla portilla
+```
+miik@miikVB:/etc/ssh$ ssh miik@localhost
+ssh: connect to host localhost port 22: Connection refused
+miik@miikVB:/etc/ssh$ ssh miik@localhost -p 1234
+The authenticity of host '[localhost]:1234 ([127.0.0.1]:1234)' can't be established.
+ECDSA key fingerprint is SHA256:jdqQc5Dwh9rar7JXqHEdQoCM6XPjcyJTUZns0yUXUfE.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '[localhost]:1234' (ECDSA) to the list of known hosts.
+miik@localhost's password: 
+Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.10.0-28-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+176 packages can be updated.
+77 updates are security updates.
+
+Last login: Wed Nov  1 22:46:58 2017 from 127.0.0.1
+```
+eli kaikki toimii!
