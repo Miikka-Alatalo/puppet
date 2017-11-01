@@ -10,5 +10,5 @@ cd git
 git clone https://github.com/Miikka-Alatalo/puppet  
 
 ## Remove puppet config files and add soft symlink
-sudo rm -rf /etc/puppet/
-sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/
+sudo rm -rf /etc/puppet/  
+sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/  
