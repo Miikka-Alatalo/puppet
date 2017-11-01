@@ -1,27 +1,27 @@
 ## Näppäimistö suomeksi ja asennukset
-´´´
+```
 setxkbmap fi  
 sudo apt-get update  
 sudo apt-get install -y git tree puppet  
-´´´
+```
 ## Tee kotihakemistoon git-kansio ja kloonaa githubista projekti sinne
-´´´
+```
 cd  
 mkdir git  
 cd git  
 git clone https://github.com/Miikka-Alatalo/puppet  
-´´´
+``` 
 ## Poista puppetin kansio /etc/ :stä ja luo symlinkki kopioidusta git-projektista sinne takaisin
-´´´
+```
 sudo rm -rf /etc/puppet/  
 sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/  
-´´´
+```
   
   
 ### ordering=manifest puppet configiin (on jo mukana kopioidussa git-projektissa)
-´´´
-nano /home/$(whoami)/git/puppet/puppet/puppet.conf  
-´´´
+```
+nano /home/$(whoami)/git/puppet/puppet/puppet.conf 
+```
 [main] -kohtaan  
   
 ordering=manifest  
