@@ -23,7 +23,7 @@ sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/
 nano /home/$(whoami)/git/puppet/puppet/puppet.conf 
 ```
 [main] -kohtaan  
-  
+```  
 ordering=manifest  
-  
+```
 tallennus ctrl+x  y  enter
