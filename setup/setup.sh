@@ -1,4 +1,3 @@
-sudo timedatectl set-timezone Europe/Helsinki
 setxkbmap fi
 sudo apt-get update
 sudo apt-get install -y git tree puppet
@@ -17,3 +16,5 @@ read -p "Apply site.pp? (y/n)?" choice
 case "$choice" in 
   y|Y ) sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp;;
 esac
+
+sudo timedatectl set-timezone Europe/Helsinki
