@@ -12,9 +12,4 @@ sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/
 
 sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp
 
-read -p "Apply site.pp? (y/n)?" choice
-case "$choice" in 
-  y|Y ) sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp;;
-esac
-
 sudo timedatectl set-timezone Europe/Helsinki
