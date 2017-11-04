@@ -1,3 +1,8 @@
+# Automaattinen
+```
+wget -O - https://raw.githubusercontent.com/Miikka-Alatalo/puppet/master/setup/setup.sh | bash
+```
+# Manuaalinen (vanha ohje)
 ## Näppäimistö suomeksi ja asennukset
 ```
 setxkbmap fi  
@@ -16,7 +21,10 @@ git clone https://github.com/Miikka-Alatalo/puppet
 sudo rm -rf /etc/puppet/  
 sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/  
 ```
-  
+## Aikavyöhykkeen asetus
+```
+sudo timedatectl set-timezone Europe/Helsinki
+```
   
 ### ordering=manifest puppet configiin (on jo mukana kopioidussa git-projektissa)
 ```
