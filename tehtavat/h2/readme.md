@@ -5,15 +5,15 @@ b) Kokeile Puppetin master-slave arkkitehtuuria kahdella koneella. Liitä raport
 
 # A) Gittiä livenä
 ### Klo 20.04
-Olin jo h1 tehdessäni luonut manuaaliset ohjeet Gitin setuppaamiseen livenä, joten minun piti vain yhdistää ne kaikki yhteen tiedostoon.
-Katsoin tähän mallia Poponapilta https://github.com/poponappi/essential-tools/blob/master/essentialtools.sh
-Ja katsoin miten yhdistää wgetillä haku ja bashilla suorittaminen yhdeksi komennoksi https://serverfault.com/questions/226386/wget-a-script-and-run-it
-
+Olin jo h1 tehdessäni luonut manuaaliset ohjeet Gitin setuppaamiseen livenä, joten minun piti vain yhdistää ne kaikki yhteen tiedostoon.  
+Katsoin tähän mallia Poponapilta https://github.com/poponappi/essential-tools/blob/master/essentialtools.sh  
+Ja katsoin miten yhdistää wgetillä haku ja bashilla suorittaminen yhdeksi komennoksi https://serverfault.com/questions/226386/wget-a-script-and-run-it  
+  
 Lopullinen yhden rivin komento: 
 ```
 wget -O - https://raw.githubusercontent.com/Miikka-Alatalo/puppet/master/setup/setup.sh | bash
 ```
-Kokeilin sitä tyhjässä Xubuntu 16.04.3 VirtualBoxissa ja pitkän console outputin pohjalle tuli:
+Loin VirtualBoxilla uuden, tyhjän koneen (Ubuntu 64bit, 2GB ram, 4GB VDI) ja annoin sille ennen käynnistämistä Xubuntu 16.04.3 iso-tiedoston. Sen käynnistyttyä valitsin "Try Xubuntu" ja heti ensimmäisenä syötin terminaaliin yllä olevan komennon. Pitkän outputin pohjalle tuli:
 ```
 ...
 Cloning into 'puppet'...
@@ -34,3 +34,7 @@ Notice: Finished catalog run in 0.01 seconds
 Suorituksen aikana gitissä olleessa site.pp:ssä oli vain moduuli, jossa oli vain viisi tekstitiedostoa kokeilua varten, mutta kaikki viisi tulivat onnistuneesti. 
 
 ### A) Valmis 20.21
+
+# B) Kokeile Puppetin master-slave arkkitehtuuria kahdella koneella.
+### Klo 20.23
+Loin toisen koneen virtualboxiin samoilla asetuksilla (Ubuntu 64bit, 2GB ram, 4GB VDI). Annoin sillekin Xubuntu iso:n ja käynnistin sen.
