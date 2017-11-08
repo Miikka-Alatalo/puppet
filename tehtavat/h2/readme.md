@@ -144,3 +144,137 @@ PING talo.local (192.168.10.51) 56(84) bytes of data.
 3 packets transmitted, 3 received, 0% packet loss, time 2013ms
 rtt min/avg/max/mdev = 0.322/0.508/0.603/0.134 ms
 ```
+Eli yhteys koneitten välillä toimii!  
+
+### Klo 21.11
+Asennan ykköskoneelle (masterille) puppetmasterin: (sudo apt-get -y install puppetmaster) mutta se olikin jo asennettuna ja service käynnissä:
+```
+xubuntu@xubuntu:~/git/puppet$ sudo apt-get install -y puppetmaster
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+puppetmaster is already the newest version (3.8.5-2ubuntu0.1).
+0 upgraded, 0 newly installed, 0 to remove and 196 not upgraded.
+xubuntu@xubuntu:~/git/puppet$ sudo service puppetmaster status
+● puppetmaster.service - Puppet master
+   Loaded: loaded (/lib/systemd/system/puppetmaster.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2017-11-08 20:53:15 EET; 21min ago
+ Main PID: 8765 (puppet)
+   CGroup: /system.slice/puppetmaster.service
+           └─8765 /usr/bin/ruby /usr/bin/puppet master
+
+Nov 08 20:53:13 talo systemd[1]: Starting Puppet master...
+Nov 08 20:53:14 talo puppet-master[8753]: Signed certificate request for ca
+Nov 08 20:53:15 talo puppet-master[8753]: talo.home has a waiting certificate request
+Nov 08 20:53:15 talo puppet-master[8753]: Signed certificate request for talo.home
+Nov 08 20:53:15 talo puppet-master[8753]: Removing file Puppet::SSL::CertificateRequest talo.home at '/var/lib/
+Nov 08 20:53:15 talo puppet-master[8753]: Removing file Puppet::SSL::CertificateRequest talo.home at '/var/lib/
+Nov 08 20:53:15 talo puppet-master[8765]: Reopening log files
+Nov 08 20:53:15 talo puppet-master[8765]: Starting Puppet master version 3.8.5
+Nov 08 20:53:15 talo systemd[1]: Started Puppet master.
+```
+Teen tehtävää seuraamalla ohjeita: http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04  
+Tässä kohtaa pitäisi antaa dns_alt_namet ja tehdä uusi certti. Aikaisemmassa osuudessa olin jo tehnyt nähä, mutta teen uudestaan certin
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo service puppetmaster stop
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo rm -r /var/lib/puppet/ssl
+xubuntu@xubuntu:~/git/puppet/puppet$ cat /etc/puppet/puppet.conf
+[main]
+logdir=/var/log/puppet
+vardir=/var/lib/puppet
+ssldir=/var/lib/puppet/ssl
+rundir=/run/puppet
+factpath=$vardir/lib/facter
+prerun_command=/etc/puppet/etckeeper-commit-pre
+postrun_command=/etc/puppet/etckeeper-commit-post
+ordering=manifest
+
+[master]
+# These are needed when the puppetmaster is run by passenger
+# and can safely be removed if webrick is used.
+ssl_client_header = SSL_CLIENT_S_DN 
+ssl_client_verify_header = SSL_CLIENT_VERIFY
+dns_alt_names = talo, talo.local
+
+[agent]
+server = talo.local
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo service puppetmaster start
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo ls /var/lib/puppet/ssl/certs/
+ca.pem        talo.home.pem
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo openssl x509 -in /var/lib/puppet/ssl/certs/talo.home.pem  -text|grep -i dns
+DNS:talo, DNS:talo.home, DNS:talo.local
+xubuntu@xubuntu:~/git/puppet/puppet$ 
+```
+Vaihdoin toiselle koneelle(slave) ja annoin komennot
+```
+sudo apt-get update
+sudo apt-get -y install puppet
+```
+Laitoin puppet.confiin [agent] -kohtaan server = talo.local
+```
+xubuntu@xubuntu:~$ sudoedit /etc/puppet/puppet.conf 
+xubuntu@xubuntu:~$ cat /etc/puppet/puppet.conf 
+[main]
+logdir=/var/log/puppet
+vardir=/var/lib/puppet
+ssldir=/var/lib/puppet/ssl
+rundir=/run/puppet
+factpath=$vardir/lib/facter
+prerun_command=/etc/puppet/etckeeper-commit-pre
+postrun_command=/etc/puppet/etckeeper-commit-post
+
+[master]
+# These are needed when the puppetmaster is run by passenger
+# and can safely be removed if webrick is used.
+ssl_client_header = SSL_CLIENT_S_DN 
+ssl_client_verify_header = SSL_CLIENT_VERIFY
+
+[agent]
+server = talo.local
+```
+Enabloin agentin
+```
+xubuntu@xubuntu:~$ sudo puppet agent --enable
+```
+Tässä kohtaa master-koneella:
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet cert --list
+```
+komento ei anna mitään palautetta, mutta unohdin käynnistää slaven puppet-servicen uudestaan (sudo service puppet restart).  
+Tämän jälkeen cert näkyy.
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet cert --list
+  "xubuntu.home" (SHA256) 4F:6C:A5:7D:BE:8D:2E:B0:22:9B:50:89:BB:AC:54:81:CA:5B:BA:86:93:74:24:59:0C:CE:E8:9D:6A:27:7C:DA
+```
+Signaan certin
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet cert --sign xubuntu.home
+Notice: Signed certificate request for xubuntu.home
+Notice: Removing file Puppet::SSL::CertificateRequest xubuntu.home at '/var/lib/puppet/ssl/ca/requests/xubuntu.home.pem'
+```
+Nyt vielä slaven koneelle puppetin restartti ja viisi tekstitiedostoa ovat tulleet masterilta!
+```
+xubuntu@xubuntu:~$ sudo service puppet restart
+xubuntu@xubuntu:~$ cat /tmp/hellomiikkafromtalo
+hellomiikkafromtalofifthhedition.txt  hellomiikkafromtalothirdedition.txt
+hellomiikkafromtalofourthedition.txt  hellomiikkafromtalo.txt
+hellomiikkafromtalosecondedition.txt  
+xubuntu@xubuntu:~$ cat /tmp/hellomiikkafromtalo.txt 
+TALO WAS HERE
+```
+### Klo 21.34 kaikki valmista
+sudo puppet cert --list ei palauta tässä vaiheessa mitään masterilla, mutta sudo ls signed-kansioon näyttää
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet cert --list
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo ls /var/lib/puppet/ssl/ca/signed
+talo.home.pem  xubuntu.home.pem
+```
+Ja masterhttp.log:
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo tail -5 /var/log/puppet/masterhttp.log
+[2017-11-08 21:32:42] - -> /production/file_metadatas/plugins?links=manage&recurse=true&ignore=.svn&ignore=CVS&ignore=.git&checksum_type=md5
+[2017-11-08 21:32:44] 192.168.10.56 - - [08/Nov/2017:21:32:44 EET] "POST /production/catalog/xubuntu.home HTTP/1.1" 200 2410
+[2017-11-08 21:32:44] - -> /production/catalog/xubuntu.home
+[2017-11-08 21:32:44] 192.168.10.56 - - [08/Nov/2017:21:32:44 EET] "PUT /production/report/xubuntu.home HTTP/1.1" 200 9
+[2017-11-08 21:32:44] - -> /production/report/xubuntu.home
+```
