@@ -279,10 +279,10 @@ xubuntu@xubuntu:~/git/puppet/puppet$ sudo tail -5 /var/log/puppet/masterhttp.log
 [2017-11-08 21:32:44] - -> /production/report/xubuntu.home
 ```
 
-##Lähteet
-http://terokarvinen.com/2017/aikataulu-linuxin-keskitetty-hallinta-3-op-vanha-ops-%E2%80%93-loppusyksy-2017-p5-puppet#comment-23261
-https://github.com/poponappi/essential-tools/blob/master/essentialtools.sh
-https://serverfault.com/questions/226386/wget-a-script-and-run-it
-http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939
-https://stackoverflow.com/questions/19185361/virtualbox-dns-says-unknown-host-win7-host-ubuntu-guest
-http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04
+## Lähteet
+http://terokarvinen.com/2017/aikataulu-linuxin-keskitetty-hallinta-3-op-vanha-ops-%E2%80%93-loppusyksy-2017-p5-puppet#comment-23261  
+https://github.com/poponappi/essential-tools/blob/master/essentialtools.sh  
+https://serverfault.com/questions/226386/wget-a-script-and-run-it  
+http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939  
+https://stackoverflow.com/questions/19185361/virtualbox-dns-says-unknown-host-win7-host-ubuntu-guest  
+http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04  
