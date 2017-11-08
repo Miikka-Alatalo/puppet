@@ -37,4 +37,110 @@ Suorituksen aikana gitissä olleessa site.pp:ssä oli vain moduuli, jossa oli va
 
 # B) Kokeile Puppetin master-slave arkkitehtuuria kahdella koneella.
 ### Klo 20.23
-Loin toisen koneen virtualboxiin samoilla asetuksilla (Ubuntu 64bit, 2GB ram, 4GB VDI). Annoin sillekin Xubuntu iso:n ja käynnistin sen.
+Loin toisen koneen virtualboxiin samoilla asetuksilla (Ubuntu 64bit, 2GB ram, 4GB VDI). Annoin sillekin Xubuntu iso:n, käynnistin sen ja valitsin Try Xubuntu.    
+![VirtualBoxImage](/tehtavat/h2/virtualbox.png?raw=true "VirtualBoxImage")
+Vaihdoin ensimmäisen Virtuaalikoneen hostnamen taloksi, (http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939)
+```
+xubuntu@xubuntu:~/git/puppet$ sudo hostnamectl set-hostname talo
+xubuntu@xubuntu:~/git/puppet$ sudoedit /etc/hosts
+sudoedit: unable to resolve host talo
+xubuntu@xubuntu:~/git/puppet$ sudoedit /etc/hosts
+sudoedit: /etc/hosts unchanged
+Hangup
+xubuntu@xubuntu:~/git/puppet$ sudo service avahi-daemon restart
+xubuntu@xubuntu:~/git/puppet$ cat /etc/hosts
+127.0.0.1 localhost
+127.0.1.1 xubuntu talo
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+```
+Katsoin ensimmäisen koneen ip-osoitteen:
+```
+xubuntu@xubuntu:~/git/puppet$ ifconfig -a
+enp0s3    Link encap:Ethernet  HWaddr 08:00:27:cb:4f:32  
+          inet addr:10.0.2.15  Bcast:10.0.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::b176:5910:c922:24e0/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:40747 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:19806 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:32942403 (32.9 MB)  TX bytes:1671643 (1.6 MB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:1484 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:1484 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:128022 (128.0 KB)  TX bytes:128022 (128.0 KB)
+```
+Ja pingasin 10.0.2.15 toiselta koneelta
+```
+xubuntu@xubuntu:~$ ping 10.0.2.15
+PING 10.0.2.15 (10.0.2.15) 56(84) bytes of data.
+64 bytes from 10.0.2.15: icmp_seq=1 ttl=64 time=0.018 ms
+64 bytes from 10.0.2.15: icmp_seq=2 ttl=64 time=0.045 ms
+64 bytes from 10.0.2.15: icmp_seq=3 ttl=64 time=0.046 ms
+64 bytes from 10.0.2.15: icmp_seq=4 ttl=64 time=0.050 ms
+^C
+--- 10.0.2.15 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3060ms
+rtt min/avg/max/mdev = 0.018/0.039/0.050/0.014 ms
+```
+Mutta kun yritän pingata kakkoskoneesta taloa tai talo.localia, en saa yhteyttä.  
+```
+xubuntu@xubuntu:~$ ping talo
+ping: unknown host talo
+xubuntu@xubuntu:~$ ping talo.local
+ping: unknown host talo.local
+```
+Hetken kun hakkasin päätä seinään, törmäsin tähän linkkiin: https://stackoverflow.com/questions/19185361/virtualbox-dns-says-unknown-host-win7-host-ubuntu-guest  
+Siinä Adam.at.Epsilon ehdottaa, että vaihtaa virtualboxin networkin NATista bridged-connectioniin. Teen sen ja nyt ensimmäinen kone saa uuden IP:n
+```
+xubuntu@xubuntu:~/git/puppet$ ifconfig -a
+enp0s3    Link encap:Ethernet  HWaddr 08:00:27:cb:4f:32  
+          inet addr:192.168.10.51  Bcast:192.168.10.255  Mask:255.255.255.0
+          inet6 addr: fe80::b176:5910:c922:24e0/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:44978 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:21664 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:36275698 (36.2 MB)  TX bytes:1912878 (1.9 MB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:2071 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2071 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:175628 (175.6 KB)  TX bytes:175628 (175.6 KB)
+```
+Yritän pingauksia toiselta koneelta (tein myös sille vaihdon NATista bridgeen) ja nyt onnistuu!
+```
+xubuntu@xubuntu:~$ ping 192.168.10.51
+PING 192.168.10.51 (192.168.10.51) 56(84) bytes of data.
+64 bytes from 192.168.10.51: icmp_seq=1 ttl=64 time=0.425 ms
+64 bytes from 192.168.10.51: icmp_seq=2 ttl=64 time=0.517 ms
+64 bytes from 192.168.10.51: icmp_seq=3 ttl=64 time=0.565 ms
+^C
+--- 192.168.10.51 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2042ms
+rtt min/avg/max/mdev = 0.425/0.502/0.565/0.060 ms
+xubuntu@xubuntu:~$ ping talo.local
+PING talo.local (192.168.10.51) 56(84) bytes of data.
+64 bytes from 192.168.10.51: icmp_seq=1 ttl=64 time=0.322 ms
+64 bytes from 192.168.10.51: icmp_seq=2 ttl=64 time=0.601 ms
+64 bytes from 192.168.10.51: icmp_seq=3 ttl=64 time=0.603 ms
+^C
+--- talo.local ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2013ms
+rtt min/avg/max/mdev = 0.322/0.508/0.603/0.134 ms
+```
