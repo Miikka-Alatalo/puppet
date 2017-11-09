@@ -9,8 +9,4 @@ Vagrant.configure(2) do |config|
  config.vm.define "slave02" do |slave02|
    slave02.vm.hostname = "slave02"
  end
-
- config.vm.define "slave03" do |slave03|
-   slave03.vm.hostname = "slave03"
- end
 end
