@@ -1,6 +1,6 @@
 setxkbmap fi
 sudo apt-get update
-sudo apt-get install -y git tree puppet
+sudo apt-get install -y git tree puppet vagrant virtualbox
 
 cd /home/$(whoami)/
 mkdir git
