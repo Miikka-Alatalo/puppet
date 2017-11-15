@@ -1,11 +1,11 @@
 # H3
 http://terokarvinen.com/2017/aikataulu-linuxin-keskitetty-hallinta-3-op-vanha-ops-%e2%80%93-loppusyksy-2017-p5-puppet#comment-23274  
   
-a) Asenna useita orjia yhteen masteriin.
+a) Asenna useita orjia yhteen masteriin.  
 b) Kerää tietoa orjista: verkkokorttien MAC-numerot, virtuaalinen vai oikea… (Katso /var/lib/puppet/)
 
-Teen tehtävän kannettavalla tietokoneella, livetikulla Xubuntu 16.04.3.
-
+Teen tehtävän kannettavalla tietokoneella, livetikulla Xubuntu 16.04.3.  
+  
 sudo lshw -short -sanitize
 ```
 H/W path                 Device      Class          Description
@@ -144,12 +144,265 @@ end
 Tässä kohtaa tulee raporttiin katkos, koska kun yritin suorittaa vagrant up , kannettavan muisti täyttyi kokonaan, eikä se saanut kuin yhden virtualmachinen päälle.  
 Sain moduuleihin tehdyt muutokset gittiin (siinäkin piti poistaa ensin tiedostoja, jotta gitin committi onnistuu (valitti ettei voi tehdä committia, koska levy ihan täynnä)).  
 Raporttia muokkasin kuitenkin selaimella enkä huomannut selaimessa committaa muutoksia ennen kuin käynnistin koneen uudestaan joten teksti raportissa edellisen commitin jälkeen katosi.
+  
+  
+  
+### Tauon jälkeen kello 20.01
 
+Käynnistin koneen uudestaan ja ajoin setup-skriptin (nyt sisältää vagrantin ja virtualboxin)
+```
+wget -O - https://raw.githubusercontent.com/Miikka-Alatalo/puppet/master/setup/setup.sh | bash
+```
+Koska muokkasin site.pp:tä enkä antanut sille default-nodea saan virheen:
+```
+Error: Could not find default node or by name with 'xubuntu.home, xubuntu' on node xubuntu.home
+```
+Muokkasin site.pp:tä
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo nano manifests/site.pp 
+xubuntu@xubuntu:~/git/puppet/puppet$ cat manifests/site.pp 
+node 'virtualslave001' {
+	include virtualslave001
+}
 
+node 'virtualslave002' {
+	include virtualslave002
+}
 
+node 'virtualslave003' {
+	include virtualslave003
+}
 
+node default {
+	include hellomiikka
+}
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet apply manifests/site.pp 
+Notice: Compiled catalog for xubuntu.home in environment production in 0.15 seconds
+Notice: /Stage[main]/Hellomiikka/File[/tmp/hellomiikka.txt]/ensure: defined content as '{md5}2257b1f7225870c83865f6e0c9ec96a5'
+Notice: Finished catalog run in 0.01 seconds
+```
+Vaihdoin masterin hostnamea ohjeiden mukaan ( http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939 ):
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo hostnamectl set-hostname talo
+xubuntu@xubuntu:~/git/puppet/puppet$ sudoedit /etc/hosts
+sudoedit: unable to resolve host talo
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo service avahi-daemon restart
+xubuntu@xubuntu:~/git/puppet/puppet$ head -2 /etc/hosts
+127.0.0.1 localhost
+127.0.1.1 xubuntu talo
+```
+Tein kotihakemistoon vagrant-kansion ja sinne Vagrantfile, johon nyt vain yksi slave:
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ cd && mkdir vagrant && cd vagrant && nano Vagrantfile
+xubuntu@xubuntu:~/vagrant$ cat Vagrantfile 
+Vagrant.configure(2) do |config|
+ config.vm.box = "bento/ubuntu-16.04"
+
+ config.vm.define "virtualslave001" do |virtualslave001|
+   virtualslave001.vm.hostname = "virtualslave001"
+ end
+
+end
+```
+Annoin komennon  vagrant up   jolla käynnistän virtuaalikoneen.  
+Vagrant ssh :lla pääsin virtuaalikoneeseen.
+Ensiksi annoin komennot
+```
+sudo apt-get update
+sudo apt-get install -y puppet
+```
+Muokkasin slaven puppet-asetuksia ja virtuaalikoneen takia vielä hosts-tiedostoa.
+```
+vagrant@virtualslave001:~$ sudoedit /etc/puppet/puppet.conf 
+vagrant@virtualslave001:~$ sudoedit /etc/hosts
+vagrant@virtualslave001:~$ head -3 /etc/hosts
+127.0.0.1	localhost
+127.0.1.1 virtualslave001 virtualslave001
+192.168.10.36 talo
+vagrant@virtualslave001:~$ tail -2 /etc/puppet/puppet.conf 
+[agent]
+server=talo
+```
+Sallin agentin ja testasin sitä
+```
+vagrant@virtualslave001:~$ sudo puppet agent --enable
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Error: Could not request certificate: Failed to open TCP connection to talo:8140 (Connection refused - connect(2) for "talo" port 8140)
+Exiting; failed to retrieve certificate and waitforcert is disabled
+```
+Masterilta puuttuu todennäköisesti puppetmaster. Asennan sen masterille (sudo apt-get install -y puppetmaster).  
+Uusi test:
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Caching certificate for ca
+Info: csr_attributes file loading from /etc/puppet/csr_attributes.yaml
+Info: Creating a new SSL certificate request for virtualslave001.home
+Info: Certificate Request fingerprint (SHA256): DE:C1:5E:49:25:E3:B0:14:07:5A:A9:B0:5F:63:5B:2F:63:A4:BA:FF:F3:7C:00:26:47:BA:6D:21:2F:68:8C:4D
+Info: Caching certificate for ca
+Exiting; no certificate found and waitforcert is disabled
+```
+Masterilla certin signaus
+```
+xubuntu@talo:~$ sudo puppet cert --list
+  "virtualslave001.home" (SHA256) DE:C1:5E:49:25:E3:B0:14:07:5A:A9:B0:5F:63:5B:2F:63:A4:BA:FF:F3:7C:00:26:47:BA:6D:21:2F:68:8C:4D
+xubuntu@talo:~$ sudo puppet cert --sign virtualslave001.home
+Notice: Signed certificate request for virtualslave001.home
+Notice: Removing file Puppet::SSL::CertificateRequest virtualslave001.home at '/var/lib/puppet/ssl/ca/requests/virtualslave001.home.pem'
+```
+Slavella testi
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Caching certificate for virtualslave001.home
+Info: Caching certificate_revocation_list for ca
+Info: Caching certificate for virtualslave001.home
+Warning: Unable to fetch my node definition, but the agent run will continue:
+Warning: undefined method `include?' for nil:NilClass
+Info: Retrieving pluginfacts
+Notice: /File[/var/lib/puppet/facts.d]/mode: mode changed '0755' to '0775'
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770207'
+Info: Creating state file /var/lib/puppet/state/state.yaml
+Notice: Finished catalog run in 0.02 seconds
+vagrant@virtualslave001:~$ ls /tmp
+```
+ls /tmp ei palauta mitään, joten jossain vikaa.  
+  
+Poistin site.pp :stä kaikki muut nodet paitsi defaultin, restarttasin servicen ja kokeilin uudestaan.
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770608'
+Notice: /Stage[main]/Hellomiikka/File[/tmp/hellomiikka.txt]/ensure: defined content as '{md5}2257b1f7225870c83865f6e0c9ec96a5'
+Notice: Finished catalog run in 0.02 seconds
+```
+Documentaation mukaan numerot eivät haittaa noden nimessä, joten ensimmäinen ajatukseni numeroiden rikkomisesta ei pidä paikkaansa. 
+https://docs.puppet.com/puppet/3.8/lang_node_definitions.html#naming  
+Laitoin takaisin poistamani nodet, käynnistin puppet ja puppetmaster servicet uudestaan ja kokeilin slavella testiä uudestaan.
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770857'
+Notice: Finished catalog run in 0.02 seconds
+```
+Nyt ei tule virhettä, mutta ei myöskään virtualslave001:lle tarkoitettua tiedostoa...  
+Vaihdan nodejen perään .home , koska puppet yrittää sieltä hakea.
+```
+xubuntu@talo:~/git/puppet/puppet/manifests$ nano site.pp 
+xubuntu@talo:~/git/puppet/puppet/manifests$ cat site.pp 
+node 'virtualslave001.home' {
+	include virtualslave001
+}
+
+node 'virtualslave002.home' {
+	include virtualslave002
+}
+
+node 'virtualslave003.home' {
+	include virtualslave003
+}
+
+node default {
+	include hellomiikka
+}
+```
+Ja uutta testiä slavella:
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510771136'
+Notice: /Stage[main]/Virtualslave001/File[/tmp/talovirtualslave001.txt]/ensure: defined content as '{md5}5c1c1f32acb1b80fafd59bf2057d09fb'
+Notice: Finished catalog run in 0.03 seconds
+vagrant@virtualslave001:~$ ls /tmp
+hellomiikka.txt  talovirtualslave001.txt  test.txt
+vagrant@virtualslave001:~$ cat /tmp/talovirtualslave001.txt 
+TALO WAS HERE TO GREET VIRTUAlSLAVE001
+```
+Eli oikea tiedosto löysi perille.
+
+### klo 20.41
+
+## b) Kerää tietoa orjista: verkkokorttien MAC-numerot, virtuaalinen vai oikea… (Katso /var/lib/puppet/)
+Muistelin, että puppet kerää tiedot yamliin, joten lähdin sitä etsimään.
+```
+xubuntu@talo:~$ ls /var/lib/puppet/
+ls: cannot open directory '/var/lib/puppet/': Permission denied
+xubuntu@talo:~$ sudo ls /var/lib/puppet/
+bucket	      client_data  facts.d  preview  rrd	  ssl	 yaml
+clientbucket  client_yaml  lib	    reports  server_data  state
+xubuntu@talo:~$ sudo ls /var/lib/puppet/yaml
+facts  node
+xubuntu@talo:~$ sudo ls /var/lib/puppet/yaml/node
+virtualslave001.home.yaml
+```
+Virtualslave001:n yaml löytyi!  
+sudo cat /var/lib/puppet/yaml/node/virtualslave001.home.yaml antaa pitkän listan tietoja, poimin sieltä joitain.
+```
+lsbdistid: Ubuntu
+kernelmajversion: "4.4"
+interfaces: "eth0,lo"
+kernel: Linux
+ipaddress_eth0: "10.0.2.15"
+macaddress_eth0: "08:00:27:67:d9:b9"
+netmask_eth0: "255.255.255.0"
+mtu_eth0: "1500"
+ipaddress_lo: "127.0.0.1"
+netmask_lo: "255.0.0.0"
+mtu_lo: "65536"
+selinux: "false"
+lsbdistrelease: "16.04"
+fqdn: virtualslave001.home
+
+...
+
+is_virtual: "true"
+architecture: amd64
+hardwaremodel: x86_64
+operatingsystem: Ubuntu
+
+...
+
+boardmanufacturer: "Oracle Corporation"
+boardproductname: VirtualBox
+boardserialnumber: "0"
+bios_vendor: "innotek GmbH"
+bios_version: VirtualBox
+bios_release_date: "12/01/2006"
+manufacturer: "innotek GmbH"
+productname: VirtualBox
+
+...
+
+kernelrelease: "4.4.0-87-generic"
+facterversion: "2.4.6"
+gid: root
+rubyplatform: x86_64-linux-gnu
+macaddress: "08:00:27:67:d9:b9"
+osfamily: Debian
+physicalprocessorcount: "1"
+hostname: virtualslave001
+operatingsystemrelease: "16.04"
+
+...
+
+filesystems: "btrfs,ext2,ext3,ext4,squashfs,vfat"
+domain: home
+lsbdistdescription: "Ubuntu 16.04.3 LTS"
+ipaddress: "10.0.2.15"
+
+```
+
+### Tehtävä tehty klo 20.52
 
 
 
 # Lähteet
-http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine
+http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine  
+http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939  
+https://docs.puppet.com/puppet/3.8/lang_node_definitions.html#naming
