@@ -1,11 +1,11 @@
 # H3
 http://terokarvinen.com/2017/aikataulu-linuxin-keskitetty-hallinta-3-op-vanha-ops-%e2%80%93-loppusyksy-2017-p5-puppet#comment-23274  
   
-a) Asenna useita orjia yhteen masteriin.
+a) Asenna useita orjia yhteen masteriin.  
 b) Kerää tietoa orjista: verkkokorttien MAC-numerot, virtuaalinen vai oikea… (Katso /var/lib/puppet/)
 
-Teen tehtävän kannettavalla tietokoneella, livetikulla Xubuntu 16.04.3.
-
+Teen tehtävän kannettavalla tietokoneella, livetikulla Xubuntu 16.04.3.  
+  
 sudo lshw -short -sanitize
 ```
 H/W path                 Device      Class          Description
@@ -328,7 +328,78 @@ Eli oikea tiedosto löysi perille.
 
 ### klo 20.41
 
-## 
+## b) Kerää tietoa orjista: verkkokorttien MAC-numerot, virtuaalinen vai oikea… (Katso /var/lib/puppet/)
+Muistelin, että puppet kerää tiedot yamliin, joten lähdin sitä etsimään.
+```
+xubuntu@talo:~$ ls /var/lib/puppet/
+ls: cannot open directory '/var/lib/puppet/': Permission denied
+xubuntu@talo:~$ sudo ls /var/lib/puppet/
+bucket	      client_data  facts.d  preview  rrd	  ssl	 yaml
+clientbucket  client_yaml  lib	    reports  server_data  state
+xubuntu@talo:~$ sudo ls /var/lib/puppet/yaml
+facts  node
+xubuntu@talo:~$ sudo ls /var/lib/puppet/yaml/node
+virtualslave001.home.yaml
+```
+Virtualslave001:n yaml löytyi!  
+sudo cat /var/lib/puppet/yaml/node/virtualslave001.home.yaml antaa pitkän listan tietoja, poimin sieltä joitain.
+```
+lsbdistid: Ubuntu
+kernelmajversion: "4.4"
+interfaces: "eth0,lo"
+kernel: Linux
+ipaddress_eth0: "10.0.2.15"
+macaddress_eth0: "08:00:27:67:d9:b9"
+netmask_eth0: "255.255.255.0"
+mtu_eth0: "1500"
+ipaddress_lo: "127.0.0.1"
+netmask_lo: "255.0.0.0"
+mtu_lo: "65536"
+selinux: "false"
+lsbdistrelease: "16.04"
+fqdn: virtualslave001.home
+
+...
+
+is_virtual: "true"
+architecture: amd64
+hardwaremodel: x86_64
+operatingsystem: Ubuntu
+
+...
+
+boardmanufacturer: "Oracle Corporation"
+boardproductname: VirtualBox
+boardserialnumber: "0"
+bios_vendor: "innotek GmbH"
+bios_version: VirtualBox
+bios_release_date: "12/01/2006"
+manufacturer: "innotek GmbH"
+productname: VirtualBox
+
+...
+
+kernelrelease: "4.4.0-87-generic"
+facterversion: "2.4.6"
+gid: root
+rubyplatform: x86_64-linux-gnu
+macaddress: "08:00:27:67:d9:b9"
+osfamily: Debian
+physicalprocessorcount: "1"
+hostname: virtualslave001
+operatingsystemrelease: "16.04"
+
+...
+
+filesystems: "btrfs,ext2,ext3,ext4,squashfs,vfat"
+domain: home
+lsbdistdescription: "Ubuntu 16.04.3 LTS"
+ipaddress: "10.0.2.15"
+
+```
+
+### Tehtävä tehty klo 20.52
+
 
 
 # Lähteet
