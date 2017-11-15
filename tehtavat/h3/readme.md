@@ -139,7 +139,11 @@ Vagrant.configure(2) do |config|
  end
 end
 ```
-
+  
+  
+Tässä kohtaa tulee raporttiin katkos, koska kun yritin suorittaa vagrant up , kannettavan muisti täyttyi kokonaan, eikä se saanut kuin yhden virtualmachinen päälle.  
+Sain moduuleihin tehdyt muutokset gittiin (siinäkin piti poistaa ensin tiedostoja, jotta gitin committi onnistuu (valitti ettei voi tehdä committia, koska levy ihan täynnä)).  
+Raporttia muokkasin kuitenkin selaimella enkä huomannut selaimessa committaa muutoksia ennen kuin käynnistin koneen uudestaan joten teksti raportissa edellisen commitin jälkeen katosi.
 
 
 
