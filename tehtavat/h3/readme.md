@@ -120,6 +120,25 @@ xubuntu@xubuntu:~/git/puppet/puppet/manifests$ ls /tmp/talovirtualslave00
 talovirtualslave001.txt  talovirtualslave002.txt  talovirtualslave003.txt
 ```
 Moduulit siis toimivat.
+### Klo 18.37
+Tein kotihakemistoon vagrant-kansion ( cd && mkdir vagrant && cd vagrant )  
+Tein sinne Vagrantfile -tiedoston, jonka sisällöksi kopioin ( http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine ) ja muokkasin itselleni sopivaksi:
+```
+Vagrant.configure(2) do |config|
+ config.vm.box = "bento/ubuntu-16.04"
+
+ config.vm.define "virtualslave001" do |virtualslave001|
+   virtualslave001.vm.hostname = "virtualslave001"
+ end
+
+ config.vm.define "virtualslave002" do |virtualslave002|
+   virtualslave002.vm.hostname = "virtualslave002"
+ end
+ config.vm.define "virtualslave003" do |virtualslave003|
+   virtualslave003.vm.hostname = "virtualslave003"
+ end
+end
+```
 
 
 
@@ -128,6 +147,5 @@ Moduulit siis toimivat.
 
 
 
-
-
-
+# Lähteet
+http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine
