@@ -403,5 +403,6 @@ ipaddress: "10.0.2.15"
 
 
 # Lähteet
-http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine
-http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939
+http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine  
+http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939  
+https://docs.puppet.com/puppet/3.8/lang_node_definitions.html#naming
