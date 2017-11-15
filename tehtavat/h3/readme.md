@@ -144,12 +144,71 @@ end
 Tässä kohtaa tulee raporttiin katkos, koska kun yritin suorittaa vagrant up , kannettavan muisti täyttyi kokonaan, eikä se saanut kuin yhden virtualmachinen päälle.  
 Sain moduuleihin tehdyt muutokset gittiin (siinäkin piti poistaa ensin tiedostoja, jotta gitin committi onnistuu (valitti ettei voi tehdä committia, koska levy ihan täynnä)).  
 Raporttia muokkasin kuitenkin selaimella enkä huomannut selaimessa committaa muutoksia ennen kuin käynnistin koneen uudestaan joten teksti raportissa edellisen commitin jälkeen katosi.
+  
+  
+  
+### Tauon jälkeen kello 20.01
 
+Käynnistin koneen uudestaan ja ajoin setup-skriptin (nyt sisältää vagrantin ja virtualboxin)
+```
+wget -O - https://raw.githubusercontent.com/Miikka-Alatalo/puppet/master/setup/setup.sh | bash
+```
+Koska muokkasin site.pp:tä enkä antanut sille default-nodea saan virheen:
+```
+Error: Could not find default node or by name with 'xubuntu.home, xubuntu' on node xubuntu.home
+```
+Muokkasin site.pp:tä
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo nano manifests/site.pp 
+xubuntu@xubuntu:~/git/puppet/puppet$ cat manifests/site.pp 
+node 'virtualslave001' {
+	include virtualslave001
+}
 
+node 'virtualslave002' {
+	include virtualslave002
+}
 
+node 'virtualslave003' {
+	include virtualslave003
+}
+
+node default {
+	include hellomiikka
+}
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo puppet apply manifests/site.pp 
+Notice: Compiled catalog for xubuntu.home in environment production in 0.15 seconds
+Notice: /Stage[main]/Hellomiikka/File[/tmp/hellomiikka.txt]/ensure: defined content as '{md5}2257b1f7225870c83865f6e0c9ec96a5'
+Notice: Finished catalog run in 0.01 seconds
+```
+Vaihdoin masterin hostnamea ohjeiden mukaan ( http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939 ):
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo hostnamectl set-hostname talo
+xubuntu@xubuntu:~/git/puppet/puppet$ sudoedit /etc/hosts
+sudoedit: unable to resolve host talo
+xubuntu@xubuntu:~/git/puppet/puppet$ sudo service avahi-daemon restart
+xubuntu@xubuntu:~/git/puppet/puppet$ head -2 /etc/hosts
+127.0.0.1 localhost
+127.0.1.1 xubuntu talo
+```
+Tein kotihakemistoon vagrant-kansion ja sinne Vagrantfile, johon nyt vain yksi slave:
+```
+xubuntu@xubuntu:~/git/puppet/puppet$ cd && mkdir vagrant && cd vagrant && nano Vagrantfile
+xubuntu@xubuntu:~/vagrant$ cat Vagrantfile 
+Vagrant.configure(2) do |config|
+ config.vm.box = "bento/ubuntu-16.04"
+
+ config.vm.define "virtualslave001" do |virtualslave001|
+   virtualslave001.vm.hostname = "virtualslave001"
+ end
+
+end
+```
+Annoin komennon  vagrant up   jolla käynnistän virtuaalikoneen.
 
 
 
 
 # Lähteet
 http://terokarvinen.com/2017/multiple-virtual-computers-in-minutes-vagrant-multimachine
+http://terokarvinen.com/2012/puppetmaster-on-ubuntu-12-04#comment-21939
