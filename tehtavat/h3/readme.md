@@ -204,9 +204,131 @@ Vagrant.configure(2) do |config|
 
 end
 ```
-Annoin komennon  vagrant up   jolla käynnistän virtuaalikoneen.
+Annoin komennon  vagrant up   jolla käynnistän virtuaalikoneen.  
+Vagrant ssh :lla pääsin virtuaalikoneeseen.
+Ensiksi annoin komennot
+```
+sudo apt-get update
+sudo apt-get install -y puppet
+```
+Muokkasin slaven puppet-asetuksia ja virtuaalikoneen takia vielä hosts-tiedostoa.
+```
+vagrant@virtualslave001:~$ sudoedit /etc/puppet/puppet.conf 
+vagrant@virtualslave001:~$ sudoedit /etc/hosts
+vagrant@virtualslave001:~$ head -3 /etc/hosts
+127.0.0.1	localhost
+127.0.1.1 virtualslave001 virtualslave001
+192.168.10.36 talo
+vagrant@virtualslave001:~$ tail -2 /etc/puppet/puppet.conf 
+[agent]
+server=talo
+```
+Sallin agentin ja testasin sitä
+```
+vagrant@virtualslave001:~$ sudo puppet agent --enable
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Error: Could not request certificate: Failed to open TCP connection to talo:8140 (Connection refused - connect(2) for "talo" port 8140)
+Exiting; failed to retrieve certificate and waitforcert is disabled
+```
+Masterilta puuttuu todennäköisesti puppetmaster. Asennan sen masterille (sudo apt-get install -y puppetmaster).  
+Uusi test:
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Caching certificate for ca
+Info: csr_attributes file loading from /etc/puppet/csr_attributes.yaml
+Info: Creating a new SSL certificate request for virtualslave001.home
+Info: Certificate Request fingerprint (SHA256): DE:C1:5E:49:25:E3:B0:14:07:5A:A9:B0:5F:63:5B:2F:63:A4:BA:FF:F3:7C:00:26:47:BA:6D:21:2F:68:8C:4D
+Info: Caching certificate for ca
+Exiting; no certificate found and waitforcert is disabled
+```
+Masterilla certin signaus
+```
+xubuntu@talo:~$ sudo puppet cert --list
+  "virtualslave001.home" (SHA256) DE:C1:5E:49:25:E3:B0:14:07:5A:A9:B0:5F:63:5B:2F:63:A4:BA:FF:F3:7C:00:26:47:BA:6D:21:2F:68:8C:4D
+xubuntu@talo:~$ sudo puppet cert --sign virtualslave001.home
+Notice: Signed certificate request for virtualslave001.home
+Notice: Removing file Puppet::SSL::CertificateRequest virtualslave001.home at '/var/lib/puppet/ssl/ca/requests/virtualslave001.home.pem'
+```
+Slavella testi
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Caching certificate for virtualslave001.home
+Info: Caching certificate_revocation_list for ca
+Info: Caching certificate for virtualslave001.home
+Warning: Unable to fetch my node definition, but the agent run will continue:
+Warning: undefined method `include?' for nil:NilClass
+Info: Retrieving pluginfacts
+Notice: /File[/var/lib/puppet/facts.d]/mode: mode changed '0755' to '0775'
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770207'
+Info: Creating state file /var/lib/puppet/state/state.yaml
+Notice: Finished catalog run in 0.02 seconds
+vagrant@virtualslave001:~$ ls /tmp
+```
+ls /tmp ei palauta mitään, joten jossain vikaa.  
+  
+Poistin site.pp :stä kaikki muut nodet paitsi defaultin, restarttasin servicen ja kokeilin uudestaan.
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770608'
+Notice: /Stage[main]/Hellomiikka/File[/tmp/hellomiikka.txt]/ensure: defined content as '{md5}2257b1f7225870c83865f6e0c9ec96a5'
+Notice: Finished catalog run in 0.02 seconds
+```
+Documentaation mukaan numerot eivät haittaa noden nimessä, joten ensimmäinen ajatukseni numeroiden rikkomisesta ei pidä paikkaansa. 
+https://docs.puppet.com/puppet/3.8/lang_node_definitions.html#naming  
+Laitoin takaisin poistamani nodet, käynnistin puppet ja puppetmaster servicet uudestaan ja kokeilin slavella testiä uudestaan.
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510770857'
+Notice: Finished catalog run in 0.02 seconds
+```
+Nyt ei tule virhettä, mutta ei myöskään virtualslave001:lle tarkoitettua tiedostoa...  
+Vaihdan nodejen perään .home , koska puppet yrittää sieltä hakea.
+```
+xubuntu@talo:~/git/puppet/puppet/manifests$ nano site.pp 
+xubuntu@talo:~/git/puppet/puppet/manifests$ cat site.pp 
+node 'virtualslave001.home' {
+	include virtualslave001
+}
 
+node 'virtualslave002.home' {
+	include virtualslave002
+}
 
+node 'virtualslave003.home' {
+	include virtualslave003
+}
+
+node default {
+	include hellomiikka
+}
+```
+Ja uutta testiä slavella:
+```
+vagrant@virtualslave001:~$ sudo puppet agent --test
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for virtualslave001.home
+Info: Applying configuration version '1510771136'
+Notice: /Stage[main]/Virtualslave001/File[/tmp/talovirtualslave001.txt]/ensure: defined content as '{md5}5c1c1f32acb1b80fafd59bf2057d09fb'
+Notice: Finished catalog run in 0.03 seconds
+vagrant@virtualslave001:~$ ls /tmp
+hellomiikka.txt  talovirtualslave001.txt  test.txt
+vagrant@virtualslave001:~$ cat /tmp/talovirtualslave001.txt 
+TALO WAS HERE TO GREET VIRTUAlSLAVE001
+```
+Eli oikea tiedosto löysi perille.
+
+### klo 20.41
+
+## 
 
 
 # Lähteet
