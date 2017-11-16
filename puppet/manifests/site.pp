@@ -1,3 +1,5 @@
+include bashrc
+
 node 'virtualslave001.home' {
 	include virtualslave001
 }
