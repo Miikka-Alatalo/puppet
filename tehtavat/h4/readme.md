@@ -147,3 +147,105 @@ atom-amd64.deb
 ...
 ```
 Eli nyt se tuli!
+### klo 19.50
+Kokeilin asentaa manuaalisesti atomin ja avata sen:
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo dpkg -i /tmp/atom-amd64.deb 
+Selecting previously unselected package atom.
+(Reading database ... 181435 files and directories currently installed.)
+Preparing to unpack /tmp/atom-amd64.deb ...
+Unpacking atom (1.22.1) ...
+Setting up atom (1.22.1) ...
+Processing triggers for gnome-menus (3.13.3-6ubuntu3.1) ...
+Processing triggers for desktop-file-utils (0.22-1ubuntu5) ...
+Processing triggers for mime-support (3.59ubuntu1) ...
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ atom
+```
+Atom aukesi.  
+Katosoin, mitä puppetin resource sanoo atomista
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo puppet resource package atom
+package { 'atom':
+  ensure => '1.22.1',
+}
+```
+Poistin sen ja kokeilin avata uudestaan
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo apt-get remove atom
+...
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ atom
+bash: /usr/bin/atom: No such file or directory
+```
+Ei auennut.  
+Lisäsin paketin asennuksen init.pp:
+```
+package { 'atom':
+                provider => dpkg,
+                ensure => installed,
+                source => '/tmp/atom-amd64.deb'
+        }
+```
+Ajoin moduulin uudestaan
+```
+puppet$ sudo  puppet apply --modulepath modules/ -e 'class {"desktop":}'
+Notice: Compiled catalog for xubuntu.home in environment production in 0.49 seconds
+Notice: /Stage[main]/Desktop/Package[atom]/ensure: ensure changed 'purged' to 'present'
+Notice: Finished catalog run in 9.38 seconds
+puppet$ atom
+```
+ja Atom aukesi, eli asennus onnistui.  
+En halua, että Atomin welcome näytetään aina. Löysin kotihakemistosta .atom kansion. Hetken ihmeteltyä ja Atomin ikkunassa olevan "show welcome screen on startup" checkboxin rämpyttelyn jälkeen, huomasin että config.cson:ssa on
+```
+...
+welcome:
+    showOnStartup: false
+```
+jos ei näytetä welcome näyttöä ja
+```
+welcome: {}
+```
+jos "show welcome..." checkboxissa on rasti.
+Ensiksi ajattelin, että on helppo pistää vain file ja content => template jne. Huomasin kuitenkin, että configissa on myös userId.  
+Ajattelin, että vaihdain vain welsome-rivin tietoja puppetilla ja etsin siihen ratkaisun. Voin käyttää puppetin file_line ja siinä match ja regex.  
+Huomasin kuitenkin, kun asensin atomin puppetin kanssa uudestaan, että config.cson:ssa ei puhtaan asennuksen jälkeen puhuta mitään welcomesta, joten ilman suoran templaten tekoa voi eteen tulla liikaa ongelmia.  
+Kokeilin ottaa userId:n kokonaan pois configista ja katsoa, mitä Atom sanoo.  
+Atom käynnistyi ongelmitta, joten jätän userId:n pois templatesta
+Kopioin config.csonin templateen ja pistin siitä init.pp filen.
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop$ cp ~/.atom/config.cson templates/
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop$ nano manifests/init.pp 
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop$ tail manifests/init.pp 
+	package { 'atom':
+		provider => dpkg,
+		ensure => installed,
+		source => '/tmp/atom-amd64.deb'
+	}
+
+	file { '/home/xubuntu/.atom/config.cson':
+                content => template('desktop/config.cson'),
+        }
+}
+```
+poistin aikaisemman config.cson ja ajoin moduulin
+```
+puppet$ sudo  puppet apply --modulepath modules/ -e 'class {"desktop":}'
+Notice: Compiled catalog for xubuntu.home in environment production in 0.48 seconds
+Notice: /Stage[main]/Desktop/File[/home/xubuntu/.atom/config.cson]/ensure: defined content as '{md5}bf01f45edd265a4d8b8b0e939ffd8592'
+Notice: Finished catalog run in 0.66 seconds
+```
+Config tuli. Kun avasin Atomin, se valitti ettei voi kirjoittaa config.cson "permission denied". Muutin init.pp:n config.cson file:
+```
+file { '/home/xubuntu/.atom/config.cson':
+		owner => xubuntu,
+                group => xubuntu,
+                content => template('desktop/config.cson'),
+        }
+```
+Ajoin uudestaan moduulin
+```
+puppet$ sudo  puppet apply --modulepath modules/ -e 'class {"desktop":}'
+Notice: Compiled catalog for xubuntu.home in environment production in 0.50 seconds
+Notice: /Stage[main]/Desktop/File[/home/xubuntu/.atom/config.cson]/owner: owner changed 'root' to 'xubuntu'
+Notice: /Stage[main]/Desktop/File[/home/xubuntu/.atom/config.cson]/group: group changed 'root' to 'xubuntu'
+Notice: Finished catalog run in 0.70 seconds
+```
