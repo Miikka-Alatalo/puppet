@@ -91,3 +91,59 @@ file { "/tmp/atom-amd64.deb":
                 source  => "puppet:///files/atom-amd64.deb"
         }
 ```
+Kokeilin apply init.pp, mutta sain virheen
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo puppet apply init.pp 
+Error: Could not parse for environment production: Unclosed quote after '' in 'desktop/superToWhiskerShortcut.sh),
+```
+suljin quoten ja kokeilin uudestaan.
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo puppet apply init.pp 
+Notice: Compiled catalog for xubuntu.home in environment production in 0.02 seconds
+Notice: Finished catalog run in 0.04 seconds
+```
+.deb ei kuitenkaan tullut /tmp  
+Vaihdoin tuplalainaukset (") yksinkertaiset ('), koska muualla init.pp:ssä ne olivat yksinkertaiset. Ei auttanut.  
+Vaihdoin filen muotoon:
+```
+file { "/tmp/atom-amd64.deb":
+                content => template('desktop/atom-amd64.deb'),
+        }
+```
+Kokeilin applyä uudestaa. 
+```
+xubuntu@xubuntu:~/git/puppet/puppet/modules/desktop/manifests$ sudo puppet apply init.pp 
+Notice: Compiled catalog for xubuntu.home in environment production in 0.01 seconds
+Notice: Finished catalog run in 0.01 seconds
+```
+Ei mitään..  
+Kokeilin poistaa skripti-tiedoston /usr/local/bin ja kokeilin uudestaan applya. Skripti ei tullut. Eli selkästi nyt jossain on virhe.  
+Luulin, että apply init.pp toimisi ja luulin käyttäneeni sitä joskus, mutta ajattelin kokeilla toista tapaa.  
+http://terokarvinen.com/2013/hello-puppet-revisited-%E2%80%93-on-ubuntu-12-04-lts  
+```
+puppet$ sudo  puppet apply --modulepath modules/ -e 'class {"desktop":}'
+Error: Could not run: /home/xubuntu/git/puppet/puppet/modules/desktop/templates/atom-amd64.deb:95: invalid multibyte char (UTF-8)
+```
+Eli nyt virhe "invalid multibyte char" kertoo, että .deb ei taida olla tekstiä, joten vaihdan init.pp:ssä takaisin muotoon:
+```
+file { '/tmp/atom-amd64.deb':
+		ensure => present,
+		mode => 664,
+		owner => root,
+		group => root,
+		source => "puppet:///files/atom-amd64.deb"
+	}
+```
+Ja uudestaan
+```
+puppet$ sudo  puppet apply --modulepath modules/ -e 'class {"desktop":}'
+Notice: Compiled catalog for xubuntu.home in environment production in 0.45 seconds
+Notice: /Stage[main]/Desktop/File[/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml]/content: content changed '{md5}65d7008f598ba5cd1e193a0f2950fbf3' to '{md5}0889bac2e340be0c858369cbc5a3f6df'
+Notice: /Stage[main]/Desktop/File[/usr/local/bin/superToWhiskerShortcut.sh]/ensure: defined content as '{md5}4b623286f68aaf4cf0637877740c2a9a'
+Notice: /Stage[main]/Desktop/File[/tmp/atom-amd64.deb]/ensure: defined content as '{md5}8453aabc903275d655d55795915de3f1'
+Notice: Finished catalog run in 0.81 seconds
+puppet$ ls /tmp
+atom-amd64.deb
+...
+```
+Eli nyt se tuli!
