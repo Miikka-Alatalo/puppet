@@ -288,3 +288,10 @@ class desktop{
         }
 }
 ```
+
+Lisäsin vielä site.pp xubuntulle oman noden:
+```
+node 'xubuntu.home' {
+	include desktop
+}
+```
