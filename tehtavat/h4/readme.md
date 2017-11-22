@@ -65,3 +65,16 @@ file { '/usr/local/bin/superToWhiskerShortcut.sh':
   content => template('desktop/superToWhiskerShortcut.sh),
 }
 ```
+  
+### klo 18.56
+
+Rupesin ketsomaan Atomin asentamista. Sitä ei tarjota kuin .deb-muodossa, joten asia tarvitsee säätämistä.  
+Löysin ohjeet https://ask.puppet.com/question/17638/is-it-possible-to-source-a-file-from-a-file-outside-a-module/ ja muokkasin niitä minulle sopiviksi.  
+Muokkasin puppetin fileserver.conf:
+```
+...
+[files]
+  path /etc/puppet/files
+   allow *
+...
+```
