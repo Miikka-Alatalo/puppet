@@ -69,7 +69,10 @@ file { '/usr/local/bin/superToWhiskerShortcut.sh':
 ### klo 18.56
 
 Rupesin ketsomaan Atomin asentamista. Sitä ei tarjota kuin .deb-muodossa, joten asia tarvitsee säätämistä.  
-Löysin ohjeet https://ask.puppet.com/question/17638/is-it-possible-to-source-a-file-from-a-file-outside-a-module/ ja muokkasin niitä minulle sopiviksi.  
+Löysin ohjeet  
+https://ask.puppet.com/question/17638/is-it-possible-to-source-a-file-from-a-file-outside-a-module/  
+https://serverfault.com/questions/188632/how-to-update-a-package-using-puppet-and-a-deb-file  
+ja muokkasin niitä minulle sopiviksi.  
 Muokkasin puppetin fileserver.conf:
 ```
 ...
@@ -77,4 +80,14 @@ Muokkasin puppetin fileserver.conf:
   path /etc/puppet/files
    allow *
 ...
+```
+ja init.pp:
+```
+file { "/tmp/atom-amd64.deb":
+                owner   => root,
+                group   => root,
+                mode    => 644,
+                ensure  => present,
+                source  => "puppet:///files/atom-amd64.deb"
+        }
 ```
