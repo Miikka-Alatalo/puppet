@@ -20,10 +20,15 @@ class desktop{
 	}
 
 	package { 'atom':
+		allowcdrom => true,
 		provider => dpkg,
 		ensure => installed,
 		source => '/tmp/atom-amd64.deb'
 	}
+
+	file { '/home/xubuntu/.atom':
+    ensure => 'directory',
+  }
 
 	file { '/home/xubuntu/.atom/config.cson':
 		owner => xubuntu,

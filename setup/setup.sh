@@ -24,14 +24,6 @@ sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp
 echo "cp .bashrc"
 cp /home/$(whoami)/git/puppet/setup/templates/.bashrc /home/$(whoami)/.bashrc
 
-echo "git:"
-echo "git config --global user.email, gimme email"
-read email
-echo "git config --global user.name, gimme name"
-read name
-git config --global user.email $email
-git config --global user.name $name
-
 echo "set timezone to Helsinki"
 sudo timedatectl set-timezone Europe/Helsinki
 

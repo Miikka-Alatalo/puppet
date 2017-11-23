@@ -1,18 +1,18 @@
 include bashrc
 
-node 'virtualslave001.home' {
+node 'virtualslave001' {
 	include virtualslave001
 }
 
-node 'virtualslave002.home' {
+node 'virtualslave002' {
 	include virtualslave002
 }
 
-node 'virtualslave003.home' {
+node 'virtualslave003' {
 	include virtualslave003
 }
 
-node 'xubuntu.home' {
+node 'xubuntu' {
 	include desktop
 }
 
