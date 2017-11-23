@@ -5,7 +5,7 @@ setxkbmap fi
 
 echo "apt-get update & installs (git tree puppet vagrant virtualbox)"
 sudo apt-get update
-sudo apt-get install -y git tree puppet vagrant virtualbox
+sudo apt-get install -y git tree puppet puppetmaster vagrant virtualbox xclip
 
 echo "clone git"
 cd /home/$(whoami)/
