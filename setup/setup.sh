@@ -3,9 +3,9 @@ echo "start"
 echo "setxkbmap fi"
 setxkbmap fi
 
-echo "apt-get update & installs (git tree puppet vagrant virtualbox)"
+echo "apt-get update & installs (git tree puppet puppetmaster xclip)"
 sudo apt-get update
-sudo apt-get install -y git tree puppet puppetmaster vagrant virtualbox xclip
+sudo apt-get install -y git tree puppet puppetmaster xclip
 
 echo "clone git"
 cd /home/$(whoami)/
