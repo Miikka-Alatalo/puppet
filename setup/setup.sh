@@ -21,9 +21,6 @@ sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/
 echo "apply site.pp"
 sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp
 
-echo "cp .bashrc"
-cp /home/$(whoami)/git/puppet/setup/templates/.bashrc /home/$(whoami)/.bashrc
-
 echo "set timezone to Helsinki"
 sudo timedatectl set-timezone Europe/Helsinki
 
