@@ -18,9 +18,6 @@ sudo rm -rf /etc/puppet/
 echo "symlink from git/puppet/puppet to /etc/"
 sudo ln -s /home/$(whoami)/git/puppet/puppet/ /etc/
 
-echo "apply site.pp"
-sudo puppet apply /home/$(whoami)/git/puppet/puppet/manifests/site.pp
-
 echo "set timezone to Helsinki"
 sudo timedatectl set-timezone Europe/Helsinki
 
