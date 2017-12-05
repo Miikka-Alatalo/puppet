@@ -1,0 +1,8 @@
+class ufwtest {
+
+	exec { 'ufw enable':
+		command => 'ufw enable',
+		path => "/usr/local/bin/:/bin/",
+	}
+
+}
