@@ -7,7 +7,7 @@ class omamoduuli {
 	package { 'openssh-server': }
 
 	file { '/etc/ssh/sshd_config':
-		content => template( 'omaModuuli/sshd_config' ),
+		content => template( 'omamoduuli/sshd_config' ),
 		notify => Service[ 'ssh' ],
 	}
 
@@ -16,7 +16,7 @@ class omamoduuli {
 	package { 'fail2ban': }
 	
 	file { '/etc/fail2ban/jail.conf':
-                content => template( 'omaModuuli/jail.conf' ),
+                content => template( 'omamoduuli/jail.conf' ),
                 notify => Service[ 'fail2ban' ],
         }
 
