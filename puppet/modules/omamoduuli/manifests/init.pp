@@ -1,4 +1,4 @@
-class omaModuuli {
+class omamoduuli {
 	File { owner => '0', group => '0', mode => '0644', }
 	Package { ensure => 'latest', allowcdrom => true, }
 	Service { ensure => 'running', enable => true, }
