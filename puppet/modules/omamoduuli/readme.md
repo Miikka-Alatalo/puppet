@@ -1,19 +1,19 @@
-#h1 Omamoduuli - tietoturvamoduuli
+# h3 Omamoduuli - tietoturvamoduuli
 
-#h2 Moduuli asentaa ja pistää käyntiin:
+# h4 Moduuli asentaa ja pistää käyntiin:
 openssh-server, fail2ban, ufw
 
-#h2 Erityistä configuraatiossa
-#h3 fail2ban
+# h4 Erityistä configuraatiossa
+# h5 fail2ban
 Bantime ja findtime ovat 900 sekuntia, eli 15 minuuttia. Maxretry on 10. Eli jos 15 minuutin aikana arvaa salasanan väärin 10 kertaa, joutuu odottamaan 15 minuuttia ennen kuin pystyy yrittää uudestaan.  
   
-#h3 ufw
+# h5 ufw
 Tulimuurista sallitaan portit 22 ja 80. 22 on ssh-yhteyttä varten ja 80 on mahdollista http-palvelinta varten.
   
-#h3 Moduuli tehtävänä
+# h5 Moduuli tehtävänä
 Moduuli on yksinkertainen, mutta se käyttää package, file, service -tyyliä sekä exec-komentoa.
 
-#h3 init.pp
+# h5 init.pp
 ```
 class omamoduuli {
 	File { owner => '0', group => '0', mode => '0644', }
